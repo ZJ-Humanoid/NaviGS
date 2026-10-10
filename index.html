@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NaviGS — 3D Gaussian Splatting Dataset of Real-World Scenes</title>
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;rect width='100' height='100' rx='20' fill='%2308080f'/&gt;&lt;text x='50' y='68' font-size='52' font-weight='900' text-anchor='middle' fill='%2322d3ee' font-family='sans-serif'&gt;N&lt;/text&gt;&lt;/svg&gt;">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ===== Reset & Base ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#e8e8ed;
+  --bg-elev:#f5f5f7;
+  --bg-card:#f5f5f7;
+  --border:rgba(0,0,0,.1);
+  --border-hover:rgba(0,0,0,.3);
+  --text:#1d1d1f;
+  --text-dim:#6e6e73;
+  --text-faint:#8e8e93;
+  --cyan:#0066ff;
+  --violet:#0066ff;
+  --brand:#0066ff;
+  --brand-2:#00a3ff;
+  --gradient:linear-gradient(135deg,#1d1d1f 0%,#6e6e73 50%,#c7c7cc 100%);
+  --gradient-silver:linear-gradient(135deg,#c7c7cc 0%,#8e8e93 50%,#48484a 100%);
+  --gradient-brand:linear-gradient(135deg,#0066ff 0%,#00a3ff 100%);
+  --radius:12px;
+  --max-w:1200px;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.7;
+  overflow-x:hidden;
+}
+a{color:var(--cyan);text-decoration:none;transition:opacity .2s}
+a:hover{opacity:.8}
+img{max-width:100%;display:block}
+
+/* ===== Navigation ===== */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+}
+.nav-inner{
+  max-width:var(--max-w);margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:64px;
+}
+.nav-logo{
+  font-weight:900;font-size:1.25rem;letter-spacing:-.02em;
+  background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.nav-links{display:flex;gap:32px;list-style:none}
+.nav-links a{
+  color:var(--text-dim);font-size:.875rem;font-weight:500;
+  transition:color .2s;
+}
+.nav-links a:hover{color:var(--text)}
+.nav-toggle{display:none;background:none;border:none;color:var(--text);font-size:1.5rem;cursor:pointer}
+
+/* ===== Hero ===== */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:120px 24px 20px;position:relative;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%,rgba(255,255,255,.6) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 50% at 20% 80%,rgba(0,0,0,.04) 0%,transparent 50%),
+    radial-gradient(ellipse 60% 50% at 80% 20%,rgba(0,0,0,.03) 0%,transparent 50%);
+}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 16px;border-radius:100px;
+  border:1px solid rgba(0,102,255,.3);
+  background:rgba(0,102,255,.06);
+  font-size:.8rem;color:#0066ff;font-weight:600;
+  margin-bottom:32px;letter-spacing:.02em;
+}
+.hero-tag .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{
+  font-size:clamp(3.5rem,10vw,7.5rem);
+  font-weight:900;letter-spacing:-.04em;line-height:1;
+  background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;margin-bottom:16px;
+}
+.hero-sub{
+  font-size:clamp(1.1rem,2.5vw,1.5rem);
+  color:var(--text-dim);font-weight:300;
+  max-width:640px;margin-bottom:48px;
+}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:72px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 28px;border-radius:8px;
+  font-size:.9rem;font-weight:600;cursor:pointer;
+  border:none;transition:all .25s;
+}
+.btn-primary{background:var(--gradient-brand);color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* Stats */
+.hero-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:0;max-width:720px;width:100%;
+  border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;background:var(--bg-card);
+}
+.stat{padding:28px 20px;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-num{
+  font-size:2rem;font-weight:900;
+  background:var(--gradient-brand);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;line-height:1.2;
+}
+.stat-label{font-size:.8rem;color:var(--text-faint);margin-top:4px;letter-spacing:.05em}
+
+/* ===== Sections ===== */
+.section{padding:100px 24px;max-width:var(--max-w);margin:0 auto}
+.section-label{
+  font-size:.75rem;font-weight:700;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--cyan);margin-bottom:12px;
+}
+.section-title{
+  font-size:clamp(1.75rem,4vw,2.5rem);font-weight:800;
+  letter-spacing:-.02em;margin-bottom:16px;line-height:1.2;
+}
+.section-desc{color:var(--text-dim);max-width:640px;margin-bottom:48px;font-size:1rem}
+
+/* ===== Abstract ===== */
+.abstract{background:var(--bg-elev);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.abstract-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
+.abstract-text p{color:var(--text-dim);margin-bottom:20px;font-size:.95rem}
+.abstract-text p strong{color:var(--text);font-weight:600}
+.abstract-highlights{display:flex;flex-direction:column;gap:16px}
+.highlight-card{
+  padding:24px;border-radius:var(--radius);
+  background:var(--bg-card);border:1px solid var(--border);
+  transition:border-color .25s;
+}
+.highlight-card:hover{border-color:var(--border-hover)}
+.highlight-card h4{font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--text)}
+.highlight-card p{font-size:.85rem;color:var(--text-dim);line-height:1.6}
+
+/* ===== Modalities ===== */
+.modality-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.modality-card{
+  padding:28px 24px;border-radius:var(--radius);
+  background:var(--bg-card);border:1px solid var(--border);
+  transition:all .25s;position:relative;overflow:hidden;
+}
+.modality-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--gradient-brand);transform:scaleX(0);transform-origin:left;
+  transition:transform .3s;
+}
+.modality-card:hover{border-color:var(--border-hover);transform:translateY(-4px)}
+.modality-card:hover::before{transform:scaleX(1)}
+.modality-icon{
+  width:44px;height:44px;border-radius:10px;
+  background:rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;
+  margin-bottom:16px;font-size:1.2rem;
+}
+.modality-card h3{font-size:1.05rem;font-weight:700;margin-bottom:8px}
+.modality-card p{font-size:.85rem;color:var(--text-dim);line-height:1.6}
+.modality-badge{
+  display:inline-block;padding:2px 10px;border-radius:100px;
+  font-size:.7rem;font-weight:600;margin-top:12px;
+  background:rgba(0,0,0,.15);color:var(--violet);
+}
+.modality-badge.rgb{background:rgba(0,0,0,.15);color:var(--cyan)}
+
+/* ===== Scene Gallery ===== */
+.gallery{background:var(--bg-elev);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.tabs{display:flex;gap:8px;margin-bottom:32px;flex-wrap:wrap}
+.tab-btn{
+  padding:10px 22px;border-radius:8px;
+  background:var(--bg-card);border:1px solid var(--border);
+  color:#48484a;font-size:.875rem;font-weight:600;
+  cursor:pointer;transition:all .2s;font-family:inherit;
+}
+.tab-btn:hover{color:var(--text);border-color:var(--border-hover)}
+.tab-btn.active{
+  background:var(--gradient-brand);color:#fff;border-color:transparent;
+}
+.scene-panel{display:none}
+.scene-panel.active{display:block;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.scene-layout{display:grid;grid-template-columns:2.5fr 1fr;gap:40px;align-items:center}
+.scene-visual{
+  border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--border);background:var(--bg-card);
+  aspect-ratio:2880/1080;
+  box-shadow:0 4px 24px rgba(0,0,0,.08);
+}
+.scene-visual img{width:100%;height:100%;object-fit:cover}
+.scene-info{text-align:left}
+.scene-info h3{font-size:1.5rem;font-weight:800;margin-bottom:8px}
+.scene-info .scene-type{
+  display:inline-block;padding:4px 12px;border-radius:100px;
+  font-size:.75rem;font-weight:600;margin-bottom:16px;
+  background:rgba(0,0,0,.1);color:var(--cyan);
+}
+.scene-info p{color:var(--text-dim);font-size:.9rem;margin-bottom:20px}
+.scene-modalities{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.scene-mod{
+  padding:6px 8px;border-radius:6px;
+  background:rgba(0,102,255,.06);border:1px solid rgba(0,102,255,.25);
+  font-size:.75rem;color:#0066ff;font-family:'JetBrains Mono',monospace;font-weight:500;
+  text-align:center;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ===== Applications ===== */
+.app-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.app-card{
+  padding:36px 28px;border-radius:var(--radius);
+  background:var(--bg-card);border:1px solid var(--border);
+  text-align:center;transition:all .25s;
+}
+.app-card:hover{border-color:var(--border-hover);transform:translateY(-4px)}
+.app-icon{
+  width:56px;height:56px;border-radius:14px;margin:0 auto 20px;
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+  background:linear-gradient(135deg,rgba(0,0,0,.12),rgba(0,0,0,.12));
+}
+.app-card h3{font-size:1.1rem;font-weight:700;margin-bottom:10px}
+.app-card p{font-size:.85rem;color:var(--text-dim);line-height:1.6}
+
+/* ===== Citation ===== */
+.cite-section{background:var(--bg-elev);border-top:1px solid var(--border)}
+.cite-box{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:28px 32px;
+  font-family:'JetBrains Mono',monospace;font-size:.8rem;
+  color:var(--text-dim);line-height:2;overflow-x:auto;
+  position:relative;
+}
+.cite-box .kw{color:var(--cyan)}
+.cite-box .str{color:#6e6e73}
+.copy-btn{
+  position:absolute;top:16px;right:16px;
+  padding:6px 14px;border-radius:6px;
+  background:rgba(0,0,0,.06);border:1px solid var(--border);
+  color:var(--text-dim);font-size:.75rem;cursor:pointer;
+  font-family:inherit;transition:all .2s;
+}
+.copy-btn:hover{color:var(--cyan);border-color:var(--cyan)}
+
+/* ===== Footer ===== */
+.footer{
+  border-top:1px solid var(--border);padding:48px 24px;
+  text-align:center;color:var(--text-faint);font-size:.8rem;
+}
+.footer-links{display:flex;gap:24px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.footer-links a{color:var(--text-dim)}
+
+/* ===== Demo Video ===== */
+.demo-video{
+  padding:0 24px 40px;
+  position:relative;
+  background:
+    linear-gradient(rgba(0,0,0,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,.03) 1px, transparent 1px);
+  background-size:40px 40px;
+}
+.video-container{
+  max-width:1100px;margin:0 auto;
+  border-radius:24px;overflow:hidden;
+  border:1px solid rgba(0,0,0,.15);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.1),
+    0 25px 80px rgba(0,0,0,.5),
+    0 0 100px rgba(0,0,0,.08);
+}
+.video-container video{
+  width:100%;display:block;
+  background:#000;
+}
+
+/* ===== Scroll Reveal ===== */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ===== Responsive ===== */
+@media(max-width:900px){
+  .abstract-grid{grid-template-columns:1fr;gap:40px}
+  .scene-layout{grid-template-columns:1fr;gap:24px}
+  .modality-grid{grid-template-columns:repeat(2,1fr)}
+  .app-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  body{font-size:16px}
+  .nav-links{display:none}
+  .nav-toggle{display:flex;align-items:center;justify-content:center;width:44px;height:44px}
+  .nav-links.open{
+    display:flex;flex-direction:column;
+    position:absolute;top:64px;left:0;right:0;
+    background:var(--bg-elev);border-bottom:1px solid var(--border);
+    padding:20px 24px;gap:16px;
+  }
+  .nav-links.open a{display:block;padding:8px 0;min-height:44px;font-size:1rem}
+  .hero-stats{grid-template-columns:1fr}
+  .stat{border-right:none;border-bottom:1px solid var(--border);padding:24px 20px}
+  .stat:last-child{border-bottom:none}
+  .stat-label{font-size:.85rem}
+  .modality-grid{grid-template-columns:1fr}
+  .section{padding:64px 20px}
+  .section-label{font-size:.8rem}
+  .tab-btn{min-height:44px;padding:10px 20px;font-size:.9rem}
+  .copy-btn{min-height:36px;min-width:60px;font-size:.8rem}
+  .footer-links a{min-height:44px;display:inline-flex;align-items:center}
+  .cite-box{font-size:.75rem;line-height:2;padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Navigation ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo" id="navLogo"><img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/HcXmbtZ93oGs6dxGExBcAv7Jnzc" alt="NaviGS" style="height:28px;width:auto;display:block;"></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#abstract">Abstract</a></li>
+      <li><a href="#modalities">Modalities</a></li>
+      <li><a href="#scenes">Scenes</a></li>
+      <li><a href="#applications">Applications</a></li>
+      <li><a href="#citation">Citation</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <div class="hero-tag"><span class="dot"></span> First Release · v1.0</div>
+  <h1>NaviGS</h1>
+  <p class="hero-sub">3D Gaussian Splatting Dataset of Real-World Scenes</p>
+  <div class="hero-cta">
+    <a href="#scenes" class="btn btn-primary">Explore Scenes</a>
+    <a href="https://github.com/zj-humanoid/NaviGS/tree/main" target="_blank" rel="noopener noreferrer" class="btn btn-ghost">GitHub</a>
+    <a href="#citation" class="btn btn-ghost">Cite Our Work</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num" data-target="120">120</div>
+      <div class="stat-label">High-Fidelity Scenes</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" data-target="50000" data-suffix="+">50,000+</div>
+      <div class="stat-label">Square Meters Covered</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" data-target="10" data-suffix="+">10+</div>
+      <div class="stat-label">Scene Categories</div>
+    </div>
+  </div>
+  <div class="video-container reveal" style="margin-top:40px;max-width:1400px;width:90%;">
+    <img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/AXLrb6hDCo2IHgxieHrc6rsinpc" alt="Scene Perception Demo" style="width:100%;display:block;">
+  </div>
+</section>
+
+<!-- ===== Abstract ===== -->
+<section class="abstract" id="abstract">
+  <div class="section">
+    <div class="reveal">
+      <div class="section-label">Overview</div>
+      <h2 class="section-title">Bridging the Gap<br>in Real-World 3D Scene Datasets</h2>
+    </div>
+    <div class="abstract-grid">
+      <div class="abstract-text reveal">
+        <p>Existing 3D scene datasets face significant limitations. Real-world datasets reconstructed from RGB-D scans often suffer from <strong>occlusions and incomplete spatial coverage</strong>, while simulated datasets exhibit a <strong>domain gap</strong> from real-world environments and are typically limited in scene complexity, with insufficient diversity in scene categories.</p>
+        <p>To address these limitations, we introduce <strong>NaviGS</strong>, a real-world dataset comprising high-fidelity 3D Gaussian Splatting (3DGS) representations and meshes. Based on the reconstructed 3DGS, we render high-quality RGB images and depth observations from different viewpoints. Furthermore, NaviGS facilitates research on <strong>spatial intelligence</strong> and supports a range of downstream tasks, including <strong>3D scene understanding, controllable scene generation, and embodied agent navigation</strong>.</p>
+        <p>NaviGS contains <strong>120 high-fidelity scenes</strong> covering more than <strong>50,000 m²</strong>, spanning <strong>more than 10 scene categories</strong>, including meeting rooms, offices, classrooms, gyms, residential environments, corridors, exhibition halls, and outdoor gardens. In its initial release, we will provide <strong>five RGB scenes and five semantic scenes</strong>.</p>
+      </div>
+      <div class="abstract-highlights reveal">
+        <div class="highlight-card">
+          <h4>Real-World Capture</h4>
+          <p>All scenes captured in real environments, eliminating the sim-to-real domain gap that plagues synthetic datasets.</p>
+        </div>
+        <div class="highlight-card">
+          <h4>Hierarchical Scene Graphs</h4>
+          <p>For a subset of scenes, we release hierarchical 3D scene graphs following the floor–room–stuff–object structure.</p>
+        </div>
+        <div class="highlight-card">
+          <h4>First Release</h4>
+          <p>Five RGB scenes and five semantic scenes are now available, with the full 120-scene corpus coming soon.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Modalities ===== -->
+<section class="section" id="modalities">
+  <div class="reveal">
+    <div class="section-label">Data Modalities</div>
+    <h2 class="section-title">Rich Multi-Modal Annotations</h2>
+    <p class="section-desc">Each scene in NaviGS comes with a comprehensive set of data modalities, supporting a wide range of research directions.</p>
+  </div>
+  <div class="modality-grid">
+    <div class="modality-card reveal">
+      <div class="modality-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="#1d1d1f"></circle><circle cx="17.5" cy="10.5" r=".5" fill="#1d1d1f"></circle><circle cx="8.5" cy="7.5" r=".5" fill="#1d1d1f"></circle><circle cx="6.5" cy="12.5" r=".5" fill="#1d1d1f"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg></div>
+      <h3>RGB</h3>
+      <p>High-quality color images rendered from reconstructed 3DGS across multiple viewpoints.</p>
+      <span class="modality-badge rgb">All Scenes</span>
+    </div>
+    <div class="modality-card reveal">
+      <div class="modality-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg></div>
+      <h3>Pose</h3>
+      <p>Precise camera pose parameters for each rendered view, enabling spatial reasoning.</p>
+      <span class="modality-badge rgb">All Scenes</span>
+    </div>
+    <div class="modality-card reveal">
+      <div class="modality-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg></div>
+      <h3>LiDAR</h3>
+      <p>Initial point cloud for 3DGS reconstruction.</p>
+      <span class="modality-badge rgb">All Scenes</span>
+    </div>
+  </div>
+  <div class="modality-grid" style="margin-top:20px;grid-template-columns:repeat(4,1fr);">
+    <div class="modality-card reveal">
+      <div class="modality-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg></div>
+      <h3>Depth</h3>
+      <p>Accurate depth maps rendered from 3DGS, providing dense geometric information.</p>
+      <span class="modality-badge rgb">All Scenes</span>
+    </div>
+    <div class="modality-card reveal">
+      <div class="modality-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg></div>
+      <h3>3DGS</h3>
+      <p>Raw 3D Gaussian Splatting representations for novel view synthesis and editing.</p>
+      <span class="modality-badge rgb">All Scenes</span>
+    </div>
+    <div class="modality-card reveal">
+      <div class="modality-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></div>
+      <h3>Mesh</h3>
+      <p>Reconstructed 3D mesh models for geometry-based applications and simulation.</p>
+      <span class="modality-badge rgb">All Scenes</span>
+    </div>
+    <div class="modality-card reveal">
+      <div class="modality-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#48484a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"></circle><circle cx="5" cy="19" r="2"></circle><circle cx="19" cy="19" r="2"></circle><path d="M12 7v4M10.5 12.5 6.5 17M13.5 12.5l4 4.5"></path></svg></div>
+      <h3>Scene Graph</h3>
+      <p>Hierarchical 3D scene graphs with floor–room–stuff–object structure and relationships.</p>
+      <span class="modality-badge">Semantic Scenes</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Scene Gallery ===== -->
+<section class="gallery" id="scenes">
+  <div class="section">
+    <div class="reveal">
+      <div class="section-label">Scene Gallery</div>
+      <h2 class="section-title">Explore Our Semantic Scenes</h2>
+      <p class="section-desc">Five semantic scenes are available in the first release, each with rendering videos and hierarchical scene graphs.</p>
+    </div>
+    <div class="tabs reveal" id="sceneTabs">
+      <button class="tab-btn active" data-scene="apartment0">apartment0</button>
+      <button class="tab-btn" data-scene="apartment1">apartment1</button>
+      <button class="tab-btn" data-scene="apartment2">apartment2</button>
+      <button class="tab-btn" data-scene="resthome0">resthome0</button>
+      <button class="tab-btn" data-scene="meetingroom0">meetingroom0</button>
+    </div>
+
+    <!-- apartment0 -->
+    <div class="scene-panel active" id="panel-apartment0">
+      <div class="scene-layout">
+        <div class="scene-visual">
+          <img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/PbfXb1o3XoonsAxKPWJch8Lbn1d" alt="apartment0 scene perception demo">
+        </div>
+        <div class="scene-info">
+          <span class="scene-type">Semantic Scene</span>
+          <h3>apartment0</h3>
+          <p>A multi-room indoor environment with detailed object-level annotations and hierarchical scene graph structure. The scene graph captures spatial relationships between furniture, fixtures, and architectural elements.</p>
+          <div class="scene-modalities">
+            <span class="scene-mod">RGB</span>
+            <span class="scene-mod">Pose</span>
+            <span class="scene-mod">LiDAR</span>
+          </div>
+          <div class="scene-modalities" style="margin-top:8px;grid-template-columns:repeat(4,1fr);">
+            <span class="scene-mod">Depth</span>
+            <span class="scene-mod">3DGS</span>
+            <span class="scene-mod">Mesh</span>
+            <span class="scene-mod">SceneGraph</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- apartment1 -->
+    <div class="scene-panel" id="panel-apartment1">
+      <div class="scene-layout">
+        <div class="scene-visual">
+          <img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/XBbzbwhP1ol8T6xMsBRcaTodncf" alt="apartment1 scene perception demo">
+        </div>
+        <div class="scene-info">
+          <span class="scene-type">Semantic Scene</span>
+          <h3>apartment1</h3>
+          <p>An indoor living space featuring beds, chairs, and various household objects. The scene graph provides a structured representation of object placements and inter-object relationships across the environment.</p>
+          <div class="scene-modalities">
+            <span class="scene-mod">RGB</span>
+            <span class="scene-mod">Pose</span>
+            <span class="scene-mod">LiDAR</span>
+          </div>
+          <div class="scene-modalities" style="margin-top:8px;grid-template-columns:repeat(4,1fr);">
+            <span class="scene-mod">Depth</span>
+            <span class="scene-mod">3DGS</span>
+            <span class="scene-mod">Mesh</span>
+            <span class="scene-mod">SceneGraph</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- apartment2 -->
+    <div class="scene-panel" id="panel-apartment2">
+      <div class="scene-layout">
+        <div class="scene-visual">
+          <img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/WkUrbSYYDooB9LxXBMScC0CEnRh" alt="apartment2 scene perception demo">
+        </div>
+        <div class="scene-info">
+          <span class="scene-type">Semantic Scene</span>
+          <h3>apartment2</h3>
+          <p>A complex multi-object scene with diverse furniture arrangements. The hierarchical scene graph organizes the space from room-level down to individual object instances with rich relational edges.</p>
+          <div class="scene-modalities">
+            <span class="scene-mod">RGB</span>
+            <span class="scene-mod">Pose</span>
+            <span class="scene-mod">LiDAR</span>
+          </div>
+          <div class="scene-modalities" style="margin-top:8px;grid-template-columns:repeat(4,1fr);">
+            <span class="scene-mod">Depth</span>
+            <span class="scene-mod">3DGS</span>
+            <span class="scene-mod">Mesh</span>
+            <span class="scene-mod">SceneGraph</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- resthome0 -->
+    <div class="scene-panel" id="panel-resthome0">
+      <div class="scene-layout">
+        <div class="scene-visual">
+          <img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/QR3Vb7i88ovOsPxXG4Ecwv4OnVc" alt="resthome0 scene perception demo">
+        </div>
+        <div class="scene-info">
+          <span class="scene-type">Semantic Scene</span>
+          <h3>resthome0</h3>
+          <p>A residential rest home environment with multiple connected spaces. The scene graph captures the floor–room–stuff–object hierarchy, enabling research in long-horizon navigation and spatial planning.</p>
+          <div class="scene-modalities">
+            <span class="scene-mod">RGB</span>
+            <span class="scene-mod">Pose</span>
+            <span class="scene-mod">LiDAR</span>
+          </div>
+          <div class="scene-modalities" style="margin-top:8px;grid-template-columns:repeat(4,1fr);">
+            <span class="scene-mod">Depth</span>
+            <span class="scene-mod">3DGS</span>
+            <span class="scene-mod">Mesh</span>
+            <span class="scene-mod">SceneGraph</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- meetingroom0 -->
+    <div class="scene-panel" id="panel-meetingroom0">
+      <div class="scene-layout">
+        <div class="scene-visual">
+          <img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/OX1fbJNEOoU2Y6xuwNocZPwKnwe" alt="meetingroom0 scene perception demo">
+        </div>
+        <div class="scene-info">
+          <span class="scene-type">Semantic Scene</span>
+          <h3>meetingroom0</h3>
+          <p>A professional meeting room with conference table, chairs, and presentation equipment. The scene graph encodes office object relationships suitable for embodied agent navigation and task planning research.</p>
+          <div class="scene-modalities">
+            <span class="scene-mod">RGB</span>
+            <span class="scene-mod">Pose</span>
+            <span class="scene-mod">LiDAR</span>
+          </div>
+          <div class="scene-modalities" style="margin-top:8px;grid-template-columns:repeat(4,1fr);">
+            <span class="scene-mod">Depth</span>
+            <span class="scene-mod">3DGS</span>
+            <span class="scene-mod">Mesh</span>
+            <span class="scene-mod">SceneGraph</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Applications ===== -->
+<section class="section" id="applications">
+  <div class="reveal">
+    <div class="section-label">Applications</div>
+    <h2 class="section-title">Powering Spatial Intelligence Research</h2>
+    <p class="section-desc">NaviGS supports a broad range of downstream tasks in 3D vision and embodied AI.</p>
+  </div>
+  <div class="app-grid">
+    <div class="app-card reveal">
+      <div class="app-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></div>
+      <h3>3D Scene Understanding</h3>
+      <p>Multi-modal annotations enable research in scene parsing, object detection, semantic segmentation, and structural reasoning.</p>
+    </div>
+    <div class="app-card reveal">
+      <div class="app-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#48484a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="11" x2="10" y2="11"></line><line x1="8" y1="9" x2="8" y2="13"></line><line x1="15" y1="12" x2="15.01" y2="12"></line><line x1="18" y1="10" x2="18.01" y2="10"></line><rect width="20" height="12" x="2" y="6" rx="2"></rect></svg></div>
+      <h3>Controllable Scene Generation</h3>
+      <p>3DGS representations and scene graphs provide a foundation for text-driven scene editing, layout generation, and novel view synthesis.</p>
+    </div>
+    <div class="app-card reveal">
+      <div class="app-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg></div>
+      <h3>Embodied Agent Navigation</h3>
+      <p>Real-world multi-room scenes with hierarchical graphs support long-horizon navigation, VLA models, and spatial planning research.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Citation ===== -->
+<section class="cite-section" id="citation">
+  <div class="section">
+    <div class="reveal">
+      <div class="section-label">Citation</div>
+      <h2 class="section-title">Citation</h2>
+      <p class="section-desc">If you use NaviGS in your research, please cite:</p>
+    </div>
+    <div class="cite-box reveal">
+      <button class="copy-btn" id="copyBtn">Copy</button>
+<span class="kw">@misc</span>{<span style="color:#1d1d1f;font-weight:600;">navigs2026</span>,
+  <span class="kw">title</span>        = {<span class="str">NaviGS: 3D Gaussian Splatting Dataset of Real-World Scenes</span>},
+  <span class="kw">author</span>       = {<span class="str">Zhejiang Humanoid Robot Innovation Center</span>},
+  <span class="kw">year</span>         = {<span class="str">2026</span>},
+  <span class="kw">howpublished</span> = {<span class="str">\url{https://github.com/zj-humanoid/NaviGS}</span>}
+}
+    </div>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <div class="footer-links">
+    <a href="#abstract">Abstract</a>
+    <a href="#modalities">Modalities</a>
+    <a href="#scenes">Scenes</a>
+    <a href="#applications">Applications</a>
+    <a href="#citation">Citation</a>
+  </div>
+  <p>© 2025 NaviGS · Zhejiang Humanoid Robot Innovation Center · Perception Algorithm Department</p>
+</footer>
+
+<script>
+// ===== Scene Tab Switching =====
+const tabBtns=document.querySelectorAll('.tab-btn');
+const panels=document.querySelectorAll('.scene-panel');
+tabBtns.forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const scene=btn.dataset.scene;
+    tabBtns.forEach(b=>b.classList.remove('active'));
+    panels.forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+scene).classList.add('active');
+  });
+});
+
+// ===== Nav Logo Scroll to Top =====
+document.getElementById('navLogo').addEventListener('click',function(e){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'})});
+
+// ===== Mobile Nav Toggle =====
+const navToggle=document.getElementById('navToggle');
+const navLinks=document.getElementById('navLinks');
+navToggle.addEventListener('click',()=>{
+  navLinks.classList.toggle('open');
+});
+navLinks.querySelectorAll('a').forEach(a=>{
+  a.addEventListener('click',()=>navLinks.classList.remove('open'));
+});
+
+// ===== Scroll Reveal =====
+const revealEls=document.querySelectorAll('.reveal');
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+},{threshold:0.12});
+revealEls.forEach(el=>observer.observe(el));
+
+// ===== Stats Counter =====
+const statNums=document.querySelectorAll('.stat-num');
+let statsAnimated=false;
+const statsObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting&&!statsAnimated){
+      statsAnimated=true;
+      statNums.forEach(el=>{
+        const target=parseInt(el.dataset.target);
+        const suffix=el.dataset.suffix||'';
+        const duration=1500;
+        const start=performance.now();
+        function tick(now){
+          const progress=Math.min((now-start)/duration,1);
+          const eased=1-Math.pow(1-progress,3);
+          const val=Math.floor(target*eased);
+          el.textContent=val.toLocaleString()+suffix;
+          if(progress<1)requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }
+  });
+},{threshold:0.5});
+const statsSection=document.querySelector('.hero-stats');
+if(statsSection)statsObserver.observe(statsSection);
+
+// ===== Copy Citation =====
+const copyBtn=document.getElementById('copyBtn');
+copyBtn.addEventListener('click',()=>{
+  const text=`@misc{navigs2026,
+  title        = {NaviGS: 3D Gaussian Splatting Dataset of Real-World Scenes},
+  author       = {Zhejiang Humanoid Robot Innovation Center},
+  year         = {2026},
+  howpublished = {\\url{https://github.com/zj-humanoid/NaviGS}}
+}`;
+  navigator.clipboard.writeText(text).then(()=>{
+    copyBtn.textContent='Copied!';
+    setTimeout(()=>copyBtn.textContent='Copy',2000);
+  }).catch(()=>{
+    copyBtn.textContent='Select & Copy';
+  });
+});
+</script>
+
+</body>
+</html>
