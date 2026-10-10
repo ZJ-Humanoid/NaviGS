@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+
+title: "NaviGS: 3D Gaussian Splatting Dataset of Real-World Scenes"
+
+message: "If you use NaviGS in your research, please cite this dataset."
+
+type: dataset
+
+authors:
+  - name: "Zhejiang Humanoid Robot Innovation Center"
+
+year: 2026
+
+repository-code: "https://github.com/zj-humanoid/NaviGS"
+
+keywords:
+  - "3D Gaussian Splatting"
+  - "3D scene understanding"
+  - "real-world scenes"
+  - "dataset"
+
+license: "CC BY-NC-SA 4.0"
