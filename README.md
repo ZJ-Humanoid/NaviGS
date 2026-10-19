@@ -1,4 +1,9 @@
-# NaviGS
+# NaviGS: 3D Gaussian Splatting Dataset of Real-World Scenes
+
+<p align="center">
+  <a href="https://zj-humanoid.github.io/NaviGS/"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Project%20Page-0066FF?style=for-the-badge" alt="Project Page"></a>
+  <a href="https://huggingface.co/datasets/zj-humanoid/NaviGS"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Dataset-FFD21E?style=for-the-badge" alt="Hugging Face"></a>
+</p>
 
 > ✅ **First Release · v1.0 is out**, with subsequent versions coming soon.
 
