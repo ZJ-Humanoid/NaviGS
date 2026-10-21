@@ -3,6 +3,7 @@
 <p align="center">
   <a href="https://zj-humanoid.github.io/NaviGS/"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Project%20Page-0066FF?style=for-the-badge" alt="Project Page"></a>
   <a href="https://huggingface.co/datasets/zj-humanoid/NaviGS"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Dataset-FFD21E?style=for-the-badge" alt="Hugging Face"></a>
+  <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey?style=for-the-badge" alt="License: CC BY-NC-SA 4.0"></a>
 </p>
 
 > ✅ **First Release · v1.0 is out**, with subsequent versions coming soon.
@@ -97,6 +98,14 @@ The scene graphs follow the hierarchical **floor–room–stuff–object** organ
 The dataset is now available for download on [Hugging Face](https://huggingface.co/datasets/zj-humanoid/NaviGS).
 
 More documentation, usage instructions, and updates will be provided in subsequent releases.
+
+## License
+
+NaviGS is released under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+You are free to share and adapt the dataset for non-commercial purposes, provided that you give appropriate credit, indicate any changes, and distribute adaptations under the same license.
+
+For details, please refer to the [full license terms](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 
 ## Citation
 
